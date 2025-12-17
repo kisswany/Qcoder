@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final TextEditingController _urlController = TextEditingController();
   String _qrData = "";
   String _scannedData = "";
-  bool _isGenerateMode = true;
+  bool _isGenerateMode = false; // Start with Scan mode
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   MobileScannerController? _scannerController;
@@ -175,6 +176,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               children: [
                 Expanded(
                   child: GestureDetector(
+                    onTap: () => setState(() => _isGenerateMode = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: !_isGenerateMode ? const Color(0xFF03DAC6) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.qr_code_scanner,
+                            color: !_isGenerateMode ? Colors.black : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Scan',
+                            style: TextStyle(
+                              color: !_isGenerateMode ? Colors.black : Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
                     onTap: () {
                       if (!_isGenerateMode) {
                         _stopScanner();
@@ -199,35 +229,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             'Generate',
                             style: TextStyle(
                               color: _isGenerateMode ? Colors.black : Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _isGenerateMode = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: !_isGenerateMode ? const Color(0xFF03DAC6) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.qr_code_scanner,
-                            color: !_isGenerateMode ? Colors.black : Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Scan',
-                            style: TextStyle(
-                              color: !_isGenerateMode ? Colors.black : Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -520,6 +521,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildScannedResult() {
+    bool isUrl = Uri.tryParse(_scannedData)?.hasAbsolutePath ?? false;
+    bool isValidUrl = isUrl && (_scannedData.startsWith('http://') || _scannedData.startsWith('https://'));
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -559,6 +563,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
           const SizedBox(height: 24),
+          if (isValidUrl) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final Uri url = Uri.parse(_scannedData);
+                  try {
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open this link')),
+                      );
+                    }
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Open Link'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4CAF50),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Row(
             children: [
               Expanded(
