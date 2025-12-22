@@ -9,19 +9,60 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
+  
+  # QR code generation and display
   qr_flutter: ^4.1.0
+  
+  # Sharing functionality
   share_plus: ^7.2.1
+  
+  # AdMob monetization
   google_mobile_ads: ^5.0.0
-  image_picker: ^1.0.4
+  
+  # QR code scanning
   mobile_scanner: ^3.5.5
+  
+  # URL launching for scanned links
   url_launcher: ^6.2.2
+  
+  # Image handling and saving
+  image_picker: ^1.0.7
+  image: ^4.0.0
+  path_provider: ^2.1.1
+  permission_handler: ^11.0.0
+  
+  # Deep linking / Sharing reception
+  receive_sharing_intent: ^1.4.5
+  
+  # Battery info
+  battery_plus: ^6.0.3
+
+  # WiFi Connection
+  wifi_iot: ^0.3.19
+
+flutter:
+  uses-material-design: true
+  generate: true  # Enable l10n generation
+  assets:
+    - assets/
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  
+  # App icon generator
+  flutter_launcher_icons: ^0.13.1
 
-flutter:
-  uses-material-design: true
-  assets:
-     - assets/
+# Icon configuration
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#1E1E1E"
+  adaptive_icon_foreground: "assets/icon.png"
